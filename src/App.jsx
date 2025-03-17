@@ -42,15 +42,6 @@ const App = () => {
         <AuthProvider>
           <BrowserRouter>
             <Suspense fallback={<LoadingFallback />}>
-              {/* <Routes>
-                {routes.map((route) => (
-                  <Route
-                    key={route.path}
-                    path={route.path}
-                    element={route.element}
-                  />
-                ))}
-              </Routes> */}
               <Routes>
                 {routes.map((route) =>
                   route.children ? (

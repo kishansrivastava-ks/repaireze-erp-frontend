@@ -7,19 +7,24 @@ const USER_KEY = "user"; // key for storing user data in local storage
 export const authService = {
   // Logs in the user by sending credentials to the API
   async login(credentials) {
-    const response = await api.post("/auth/login", credentials);
-    this.setSession(response.data); // store token and user data
-    return response.data;
+    try {
+      console.log(credentials);
+      const response = await api.post("/auth/login", credentials);
+      console.log(response.data);
+      this.setSession(response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Login error",
+        error.response?.data?.message || error.message
+      );
+      throw new Error(error.response?.data?.message || "Login failed!");
+    }
   },
 
   // Logs out the user by clearing session data
   async logout() {
     this.clearSession();
-    // try {
-    //   await api.post("/users/logout");
-    // } catch (error) {
-    //   console.error("Logout error:", error);
-    // }
   },
 
   // stores token in cookies and user data in local storage
@@ -55,5 +60,19 @@ export const authService = {
 
   getToken() {
     return Cookies.get(TOKEN_KEY);
+  },
+
+  async verifyPin(pinData) {
+    try {
+      const response = await api.post("/auth/verify-pin", pinData);
+      this.setSession(response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error verifying pin:",
+        error.response?.data?.message || error.message
+      );
+      throw new Error(error.response?.data?.message || error.message);
+    }
   },
 };

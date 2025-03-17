@@ -1,12 +1,3 @@
-// import React from "react";
-// import styled from "styled-components";
-// import { useForm } from "react-hook-form";
-// import { zodResolver } from "@hookform/resolvers/zod";
-// import { z } from "zod";
-// import { motion } from "framer-motion";
-// import { useAuth } from "@/context/AuthContext";
-// import { useNavigate } from "react-router-dom";
-
 import styled from "styled-components";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -110,11 +101,21 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     try {
-      await login(data.phone, data.password);
-      navigate("/dashboard");
+      const userData = await login({
+        phone: data.phone,
+        password: data.password,
+      });
+      console.log("User logged in", userData);
+
+      // redirection based on usertype
+      if (userData.userType === "staff") {
+        navigate("/verify-pin");
+      } else {
+        navigate("/admin-dashboard");
+      }
     } catch (error) {
-      console.error("Login failed:", error);
-      // Handle login error (show notification, etc.)
+      console.error("Error logging in", error);
+      alert(error.message || "Login failed Please try again !");
     }
   };
 
