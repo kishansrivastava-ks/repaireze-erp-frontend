@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import api from "@/services/api";
 
 export const fetchStaffs = async () => {
@@ -32,5 +31,23 @@ export const fetchVendors = async () => {
 // Add a new vendor
 export const addVendor = async (vendorData) => {
   const response = await api.post("/vendors/add", vendorData);
+  return response.data;
+};
+
+// Fetch services based on status
+export const fetchServices = async (status) => {
+  const response = await api.get(`/services?status=${status}`);
+  return response.data;
+};
+
+// Search customer by name or mobile
+export const searchCustomers = async (query) => {
+  const response = await api.get(`/customers/search?query=${query}`);
+  return response.data;
+};
+
+// Add a new service
+export const addService = async (serviceData) => {
+  const response = await api.post("/services/add", serviceData);
   return response.data;
 };
