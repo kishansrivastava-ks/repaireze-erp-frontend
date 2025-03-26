@@ -144,6 +144,7 @@ const StaffProfile = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
 
+  console.log(user);
   // Simulate data loading
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);

@@ -18,6 +18,13 @@ const AddCustomer = lazy(() => import("../pages/StaffDashboard/AddCustomer"));
 const AddService = lazy(() => import("../pages/StaffDashboard/AddService"));
 const AddVendor = lazy(() => import("../pages/StaffDashboard/AddVendor"));
 
+const MarketingCampaigns = lazy(
+  () => import("../pages/StaffDashboard/Marketing/MarketingCampaigns")
+);
+const MarketingPlans = lazy(
+  () => import("../pages/StaffDashboard/Marketing/MarketingPlans")
+);
+
 export const routes = [
   {
     path: "/",
@@ -76,6 +83,14 @@ export const routes = [
       {
         path: "add-vendor",
         element: <AddVendor />,
+      },
+      {
+        path: "marketing-plans",
+        element: <MarketingPlans />,
+      },
+      {
+        path: "marketing-campaigns",
+        element: <MarketingCampaigns />,
       },
     ],
   },

@@ -3,6 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import styled from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { ChevronDown, ChevronUp, TrendingUp } from "lucide-react";
 
 // Icons can be represented as SVG components
 const ProfileIcon = () => (
@@ -328,6 +329,8 @@ const getPageTitle = (pathname) => {
   if (pathname.includes("/add-service")) return "Manage Services";
   if (pathname.includes("/add-customer")) return "Customer Management";
   if (pathname.includes("/add-vendor")) return "Vendor Management";
+  if (pathname.includes("/marketing-plans")) return "Marketing Plans";
+  if (pathname.includes("marketing-campaigns")) return "Marketing Campaigns";
   return "Dashboard";
 };
 
@@ -336,6 +339,11 @@ const StaffLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [marketingDropdownOpen, setMarketingDropdownOpen] = useState(false);
+
+  const toggleMarketingDropdown = () => {
+    setMarketingDropdownOpen(!marketingDropdownOpen);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -421,6 +429,28 @@ const StaffLayout = () => {
               </LinkIcon>
               <LinkText collapsed={collapsed ? 1 : 0}>Vendors</LinkText>
             </SidebarLink>
+            <SidebarLink
+              onClick={toggleMarketingDropdown}
+              collapsed={collapsed ? 1 : 0}
+            >
+              <LinkIcon collapsed={collapsed ? 1 : 0}>
+                <TrendingUp />
+              </LinkIcon>
+              <LinkText collapsed={collapsed ? 1 : 0}> Marketing</LinkText>
+              <DropdownIcon rotated={marketingDropdownOpen ? 1 : 0}>
+                <ChevronDown />
+              </DropdownIcon>
+            </SidebarLink>
+            {marketingDropdownOpen && (
+              <DropdownMenu collapsed={collapsed ? 1 : 0}>
+                <DropdownItem to="/staff-dashboard/marketing-plans">
+                  Marketing Plans
+                </DropdownItem>
+                <DropdownItem to="/staff-dashboard/marketing-campaigns">
+                  Marketing Campaigns
+                </DropdownItem>
+              </DropdownMenu>
+            )}
           </NavLinks>
         </div>
         <LogoutButton onClick={handleLogout} collapsed={collapsed ? 1 : 0}>
@@ -456,3 +486,19 @@ const StaffLayout = () => {
 };
 
 export default StaffLayout;
+
+const DropdownMenu = styled.div`
+  display: ${({ collapsed }) => (collapsed ? "none" : "block")};
+  padding-left: 20px;
+`;
+
+const DropdownItem = styled(SidebarLink)`
+  font-size: 14px;
+  padding: 8px 16px;
+`;
+
+const DropdownIcon = styled.span`
+  margin-left: auto;
+  transform: ${({ rotated }) => (rotated ? "rotate(0)" : "rotate(-90deg)")};
+  transition: transform 0.3s ease-in-out;
+`;

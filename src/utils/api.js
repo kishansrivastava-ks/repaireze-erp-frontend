@@ -51,3 +51,14 @@ export const addService = async (serviceData) => {
   const response = await api.post("/services/add", serviceData);
   return response.data;
 };
+
+export const fetchMarketingCampaigns = async (type) => {
+  const response = await api.get(`/marketing/campaigns?type=${type}`);
+  console.log(response);
+  return response.data.campaigns;
+};
+
+export const addMarketingCampaign = async (campaignData) => {
+  const response = await api.post("/marketing/campaigns", campaignData);
+  return response;
+};
