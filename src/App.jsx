@@ -6,6 +6,7 @@ import { QueryProvider } from "./context/QueryProvider";
 import { AuthProvider } from "./context/AuthContext";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { routes } from "./config/routes";
+import { Toaster } from "react-hot-toast";
 
 // Layouts
 const AppLayout = React.lazy(() => import("./layouts/AppLayout"));
@@ -69,6 +70,15 @@ const App = () => {
               </Routes>
             </Suspense>
           </BrowserRouter>
+          <Toaster
+            toastOptions={{
+              style: {
+                borderRadius: "10px",
+                background: "#333",
+                color: "#fff",
+              },
+            }}
+          />
         </AuthProvider>
       </QueryProvider>
     </ThemeProvider>

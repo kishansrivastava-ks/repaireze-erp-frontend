@@ -1,36 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import styled from "styled-components";
-import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { fetchMarketingCampaigns, addMarketingCampaign } from "@/utils/api";
-
-// const fetchMarketingCampaigns = async (type) => {
-//   const response = await fetch(
-//     `http://localhost:5000/api/marketing/campaigns?type=${type}`
-//   );
-//   const data = await response.json();
-//   return data.campaigns || [];
-// };
-
-// const addMarketingCampaign = async (campaignData) => {
-//   const response = await fetch(
-//     "http://localhost:5000/api/marketing/campaigns",
-//     {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify(campaignData),
-//     }
-//   );
-
-//   if (!response.ok) {
-//     throw new Error("Failed to add campaign");
-//   }
-
-//   return response.json();
-// };
+import { errorToast, successToast } from "@/utils/ToastNotfications";
 
 function MarketingCampaigns() {
   const { user } = useAuth();
@@ -64,7 +37,7 @@ function MarketingCampaigns() {
     mutationFn: addMarketingCampaign,
     onSuccess: () => {
       queryClient.invalidateQueries(["marketingCampaigns"]);
-      toast.success("Campaign added successfully !");
+      successToast("Campaign added successfully !");
       setCampaignData({
         type: campaignType,
         city: "",
@@ -77,7 +50,7 @@ function MarketingCampaigns() {
       setShowForm(false);
     },
     onError: (error) => {
-      toast.error(`Error adding campaign: ${error.message}`);
+      errorToast(`Error adding campaign: ${error.message}`);
     },
   });
 
@@ -205,7 +178,7 @@ function MarketingCampaigns() {
                   <LoadingSpinner /> Adding...
                 </>
               ) : (
-                "AddCampaign"
+                "Add Campaign"
               )}
             </FormButton>
             <CancelButton type="button" onClick={cancelForm}>

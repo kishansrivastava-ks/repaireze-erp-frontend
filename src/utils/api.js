@@ -62,3 +62,13 @@ export const addMarketingCampaign = async (campaignData) => {
   const response = await api.post("/marketing/campaigns", campaignData);
   return response;
 };
+
+export const fetchMarketingPlans = async (type) => {
+  const response = await api.get(`/marketing/plans?type=${type}`);
+  return response.data.plans;
+};
+
+export const addMarketingPlan = async (planData) => {
+  const response = await api.post("/marketing/plans", planData);
+  return response;
+};
