@@ -404,9 +404,9 @@ const AddStaff = () => {
 
   return (
     <Container
-      initial="hidden"
-      animate="visible"
-      exit="exit"
+      // initial="hidden"
+      // animate="visible"
+      // exit="exit"
       variants={containerVariants}
     >
       {!success ? (

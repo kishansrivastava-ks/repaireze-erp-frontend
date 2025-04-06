@@ -11,6 +11,9 @@ import {
   FaSignOutAlt,
   FaBars,
   FaTimes,
+  FaUserAlt,
+  FaUserAstronaut,
+  FaUserCheck,
 } from "react-icons/fa";
 import { BiChevronRight } from "react-icons/bi";
 
@@ -69,7 +72,7 @@ const Logo = styled.div`
   }
 
   &::before {
-    content: "M";
+    content: "R";
     display: flex;
     align-items: center;
     justify-content: center;
@@ -386,11 +389,7 @@ const AdminLayout = () => {
       >
         <BrandContainer>
           <Logo isCollapsed={isCollapsed}>
-            {!isCollapsed && (
-              <>
-                endt <span>Technologies</span>
-              </>
-            )}
+            {!isCollapsed && <>RepairEze</>}
           </Logo>
         </BrandContainer>
 
@@ -422,6 +421,13 @@ const AdminLayout = () => {
           >
             <FaUserPlus />
             <span>Add Staff</span>
+          </SidebarLink>
+          <SidebarLink
+            to="/admin-dashboard/add-admin"
+            iscollapsed={isCollapsed.toString()}
+          >
+            <FaUserCheck />
+            <span>Add Admin</span>
           </SidebarLink>
         </NavLinks>
 

@@ -7,9 +7,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
-  // const [user, setUser] = useState(() => authService.getUser());
-  // const [isLoading, setIsLoading] = useState(true);
-
   // 🔴 USING QUERY
   const queryClient = useQueryClient();
   const { data: user, isLoading } = useQuery({
@@ -33,41 +30,6 @@ export const AuthProvider = ({ children }) => {
       queryClient.setQueryData(["authUser"], null); // clear cache
     },
   });
-
-  /**
-   * Initializes authentication state when the component mounts.
-   * Retrieves the user from localStorage (if available).
-  //  */
-  // useEffect(() => {
-  //   const initAuth = () => {
-  //     const user = authService.getUser();
-  //     console.log(authService.getUser());
-  //     setUser(user);
-  //     setIsLoading(false);
-  //   };
-
-  //   initAuth();
-  // }, []);
-
-  // const login = async (phone, password) => {
-  //   setIsLoading(true);
-  //   try {
-  //     const response = await authService.login({ phone, password });
-  //     setUser(response.user);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // const logout = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     await authService.logout();
-  //     setUser(null);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   return (
     <AuthContext.Provider

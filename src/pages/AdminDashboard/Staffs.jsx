@@ -522,7 +522,7 @@ const Staffs = () => {
                 {sortedStaffs.map((staff) => (
                   <motion.tr
                     key={staff._id}
-                    variants={itemVariants}
+                    // variants={itemVariants}
                     exit={{ opacity: 0 }}
                   >
                     <td>

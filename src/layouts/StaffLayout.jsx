@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import styled from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { ChevronDown, ChevronUp, TrendingUp } from "lucide-react";
+import { ChevronDown, ChevronUp, TrendingUp, Wallet } from "lucide-react";
 
 // Icons can be represented as SVG components
 const ProfileIcon = () => (
@@ -142,10 +142,12 @@ const Logo = styled.div`
   font-weight: bold;
   font-size: ${({ theme }) => theme.fontSizes.md};
   color: white;
-  display: ${(props) => (props.collapsed ? "none" : "block")};
+  display: ${(props) => (props.collapsed ? "none" : "flex")};
+  align-items: center;
+  gap: 0.5rem;
 `;
 
-const CompanyInitial = styled.div`
+const LogoContainer = styled.div`
   display: ${(props) => (props.collapsed ? "flex" : "none")};
   width: 40px;
   height: 40px;
@@ -156,6 +158,10 @@ const CompanyInitial = styled.div`
   justify-content: center;
   font-weight: bold;
   font-size: ${({ theme }) => theme.fontSizes.md};
+`;
+const LogoImage = styled.img`
+  height: 40px;
+  width: 40px;
 `;
 
 const CollapseButton = styled.button`
@@ -340,9 +346,13 @@ const StaffLayout = () => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [marketingDropdownOpen, setMarketingDropdownOpen] = useState(false);
+  const [accountsDropdownOpen, setAccountsDropdownOpen] = useState(false);
 
   const toggleMarketingDropdown = () => {
     setMarketingDropdownOpen(!marketingDropdownOpen);
+  };
+  const toggleAccountsDropdown = () => {
+    setAccountsDropdownOpen(!accountsDropdownOpen);
   };
 
   const handleLogout = async () => {
@@ -384,9 +394,13 @@ const StaffLayout = () => {
         <div>
           <SidebarHeader collapsed={collapsed}>
             {collapsed ? (
-              <CompanyInitial collapsed={collapsed}>M</CompanyInitial>
+              // <CompanyInitial collapsed={collapsed}>M</CompanyInitial>
+              <LogoImage collapsed={collapsed} src="/logo.png" alt="logo" />
             ) : (
-              <Logo collapsed={collapsed}>Mendt ERP</Logo>
+              <Logo collapsed={collapsed}>
+                <LogoImage src="/logo.png" alt="logo" />
+                RepairEze
+              </Logo>
             )}
             <CollapseButton collapsed={collapsed} onClick={toggleSidebar}>
               <CollapseIcon />
@@ -403,7 +417,7 @@ const StaffLayout = () => {
               <LinkText collapsed={collapsed ? 1 : 0}>Profile</LinkText>
             </SidebarLink>
             <SidebarLink
-              to="/staff-dashboard/add-service"
+              to="/staff-dashboard/services"
               collapsed={collapsed ? 1 : 0}
             >
               <LinkIcon collapsed={collapsed ? 1 : 0}>
@@ -412,7 +426,7 @@ const StaffLayout = () => {
               <LinkText collapsed={collapsed ? 1 : 0}>Services</LinkText>
             </SidebarLink>
             <SidebarLink
-              to="/staff-dashboard/add-customer"
+              to="/staff-dashboard/customers"
               collapsed={collapsed ? 1 : 0}
             >
               <LinkIcon collapsed={collapsed ? 1 : 0}>
@@ -421,7 +435,7 @@ const StaffLayout = () => {
               <LinkText collapsed={collapsed ? 1 : 0}>Customers</LinkText>
             </SidebarLink>
             <SidebarLink
-              to="/staff-dashboard/add-vendor"
+              to="/staff-dashboard/vendors"
               collapsed={collapsed ? 1 : 0}
             >
               <LinkIcon collapsed={collapsed ? 1 : 0}>
@@ -448,6 +462,28 @@ const StaffLayout = () => {
                 </DropdownItem>
                 <DropdownItem to="/staff-dashboard/marketing-campaigns">
                   Marketing Campaigns
+                </DropdownItem>
+              </DropdownMenu>
+            )}
+            <SidebarLink
+              onClick={toggleAccountsDropdown}
+              collapsed={collapsed ? 1 : 0}
+            >
+              <LinkIcon collapsed={collapsed ? 1 : 0}>
+                <Wallet />
+              </LinkIcon>
+              <LinkText collapsed={collapsed ? 1 : 0}> Accounts</LinkText>
+              <DropdownIcon rotated={accountsDropdownOpen ? 1 : 0}>
+                <ChevronDown />
+              </DropdownIcon>
+            </SidebarLink>
+            {accountsDropdownOpen && (
+              <DropdownMenu collapsed={collapsed ? 1 : 0}>
+                <DropdownItem to="/staff-dashboard/receivables">
+                  Receivables
+                </DropdownItem>
+                <DropdownItem to="/staff-dashboard/payables">
+                  Payables
                 </DropdownItem>
               </DropdownMenu>
             )}

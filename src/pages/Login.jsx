@@ -341,8 +341,8 @@ const Login = () => {
 
       <LoginFormContainer>
         <CompanyLogo>
-          <LogoText>Mendt Technologies</LogoText>
-          <Tagline>Private Limited</Tagline>
+          <LogoText>RepairEze</LogoText>
+          {/* <Tagline>Private Limited</Tagline> */}
         </CompanyLogo>
 
         <LoginForm

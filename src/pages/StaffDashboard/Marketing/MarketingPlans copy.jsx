@@ -2,17 +2,21 @@ import { useAuth } from "@/context/AuthContext";
 import { fetchMarketingPlans, addMarketingPlan } from "@/utils/api";
 import { errorToast, successToast } from "@/utils/ToastNotfications";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import styled from "styled-components";
-
-// import useAdvancedFilter from "@/hooks/useAdvancedFilter";
 
 function MarketingPlans() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [planType, setPlanType] = useState("physical");
-
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [currentFilter, setCurrentFilter] = useState({
+    field: "city",
+    operator: "equals",
+    value: "",
+  });
+  const [filters, setFilters] = useState([]);
   const [planData, setPlanData] = useState({
     type: "physical",
     city: "",
@@ -33,11 +37,48 @@ function MarketingPlans() {
     queryFn: () => fetchMarketingPlans("digital"),
   });
 
+  // Combine plans
+  const combinedPlans = [...physicalPlans, ...digitalPlans];
+
+  // Advanced Filtering Logic
+  const filteredData = useMemo(() => {
+    return combinedPlans.filter((plan) => {
+      return filters.every((filter) => {
+        const value = plan[filter.field];
+        const filterValue = filter.value;
+
+        switch (filter.operator) {
+          case "equals":
+            return (
+              String(value).toLowerCase() === String(filterValue).toLowerCase()
+            );
+          case "notEquals":
+            return (
+              String(value).toLowerCase() !== String(filterValue).toLowerCase()
+            );
+          case "contains":
+            return String(value)
+              .toLowerCase()
+              .includes(String(filterValue).toLowerCase());
+          case "notContains":
+            return !String(value)
+              .toLowerCase()
+              .includes(String(filterValue).toLowerCase());
+          case "greaterThan":
+            return parseFloat(value) > parseFloat(filterValue);
+          case "lessThan":
+            return parseFloat(value) < parseFloat(filterValue);
+          default:
+            return true;
+        }
+      });
+    });
+  }, [combinedPlans, filters]);
+
   const mutation = useMutation({
     mutationFn: addMarketingPlan,
     onSuccess: () => {
       queryClient.invalidateQueries(["marketingPlans"]);
-      // toast.success("Plan added successfully");
       successToast("Plan Added Successfully");
 
       setPlanData({
@@ -82,8 +123,131 @@ function MarketingPlans() {
     });
   };
 
+  // Filter Modal Component
+  const FilterModal = () => {
+    const fieldOptions = [
+      { value: "city", label: "City" },
+      { value: "area", label: "Area" },
+      { value: "expectedROAS", label: "Expected ROAS" },
+      { value: "startDate", label: "Start Date" },
+      { value: "endDate", label: "End Date" },
+    ];
+
+    const operatorOptions = [
+      { value: "equals", label: "Equals" },
+      { value: "notEquals", label: "Not Equals" },
+      { value: "contains", label: "Contains" },
+      { value: "notContains", label: "Not Contains" },
+      { value: "greaterThan", label: "Greater Than" },
+      { value: "lessThan", label: "Less Than" },
+    ];
+
+    const handleAddFilter = () => {
+      if (currentFilter.value.trim()) {
+        setFilters([...filters, { ...currentFilter }]);
+        setShowFilterModal(false);
+        // Reset current filter
+        setCurrentFilter({
+          field: "city",
+          operator: "equals",
+          value: "",
+        });
+      }
+    };
+
+    return (
+      <ModalOverlay>
+        <ModalContent>
+          <h2>Add Filter</h2>
+          <Select
+            value={currentFilter.field}
+            onChange={(e) =>
+              setCurrentFilter((prev) => ({
+                ...prev,
+                field: e.target.value,
+              }))
+            }
+          >
+            {fieldOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+
+          <Select
+            value={currentFilter.operator}
+            onChange={(e) =>
+              setCurrentFilter((prev) => ({
+                ...prev,
+                operator: e.target.value,
+              }))
+            }
+          >
+            {operatorOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+
+          <Input
+            type={currentFilter.field.includes("Date") ? "date" : "text"}
+            value={currentFilter.value}
+            onChange={(e) =>
+              setCurrentFilter((prev) => ({
+                ...prev,
+                value: e.target.value,
+              }))
+            }
+            placeholder="Enter filter value"
+          />
+
+          <ButtonGroup>
+            <FormButton onClick={handleAddFilter}>Add Filter</FormButton>
+            <CancelButton onClick={() => setShowFilterModal(false)}>
+              Cancel
+            </CancelButton>
+          </ButtonGroup>
+        </ModalContent>
+      </ModalOverlay>
+    );
+  };
+
+  // Active Filters Display Component
+  const ActiveFilters = () => {
+    if (filters.length === 0) return null;
+
+    const removeFilter = (filterToRemove) => {
+      setFilters(filters.filter((filter) => filter !== filterToRemove));
+    };
+
+    const clearFilters = () => {
+      setFilters([]);
+    };
+
+    return (
+      <FilterChipsContainer>
+        {filters.map((filter, index) => (
+          <FilterChip key={index}>
+            {filter.field} {filter.operator} {filter.value}
+            <RemoveFilterButton onClick={() => removeFilter(filter)}>
+              ✕
+            </RemoveFilterButton>
+          </FilterChip>
+        ))}
+        <ClearFiltersButton onClick={clearFilters}>
+          Clear All Filters
+        </ClearFiltersButton>
+      </FilterChipsContainer>
+    );
+  };
+
   const renderPlanTable = (plans, type) => {
-    return plans.length === 0 ? (
+    // Filter plans by type
+    const typedPlans = plans.filter((plan) => plan.type === type);
+
+    return typedPlans.length === 0 ? (
       <EmptyState>
         <p>No {type} marketing plans found</p>
       </EmptyState>
@@ -99,7 +263,7 @@ function MarketingPlans() {
           </tr>
         </thead>
         <tbody>
-          {plans.map((plan) => (
+          {typedPlans.map((plan) => (
             <TableRow key={plan._id}>
               <Td>{plan.city}</Td>
               <Td>{plan.area}</Td>
@@ -116,6 +280,15 @@ function MarketingPlans() {
   return (
     <Container>
       <Title>Marketing Plans Management</Title>
+
+      {/* Filter Button */}
+      <AddFilterButton onClick={() => setShowFilterModal(true)}>
+        + Add Filter
+      </AddFilterButton>
+
+      {/* Active Filters Display */}
+      <ActiveFilters />
+
       {!showForm ? (
         <AddButton onClick={toggleForm}>+ Add New Plan</AddButton>
       ) : (
@@ -196,22 +369,27 @@ function MarketingPlans() {
           <p>loading physical plans...</p>
         </LoadingContainer>
       ) : (
-        renderPlanTable(physicalPlans, "physical")
+        renderPlanTable(filteredData, "physical")
       )}
 
+      <Title>Digital Marketing Plans</Title>
       {isLoadingDigital ? (
         <LoadingContainer>
           <LoadingSpinner />
           <p>loading digital plans...</p>
         </LoadingContainer>
       ) : (
-        renderPlanTable(digitalPlans, "digital")
+        renderPlanTable(filteredData, "digital")
       )}
+
+      {/* Filter Modal */}
+      {showFilterModal && <FilterModal />}
     </Container>
   );
 }
 
 export default MarketingPlans;
+
 const Container = styled.div`
   background: white;
   padding: 2rem;
@@ -399,4 +577,70 @@ const CampaignCard = styled.div`
   padding: 1rem;
   margin-bottom: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+// Styled Components for Filter UI
+const AddFilterButton = styled.button`
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+  cursor: pointer;
+`;
+
+const FilterChipsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+`;
+
+const FilterChip = styled.div`
+  background-color: #f0f0f0;
+  border-radius: 20px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`;
+
+const RemoveFilterButton = styled.button`
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+`;
+
+const ClearFiltersButton = styled.button`
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 `;

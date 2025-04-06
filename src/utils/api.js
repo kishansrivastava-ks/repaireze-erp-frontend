@@ -46,6 +46,11 @@ export const searchCustomers = async (query) => {
   return response.data;
 };
 
+export const searchVendors = async (query) => {
+  const response = await api.get(`/vendors/search?query=${query}`);
+  return response.data;
+};
+
 // Add a new service
 export const addService = async (serviceData) => {
   const response = await api.post("/services/add", serviceData);
@@ -70,5 +75,25 @@ export const fetchMarketingPlans = async (type) => {
 
 export const addMarketingPlan = async (planData) => {
   const response = await api.post("/marketing/plans", planData);
+  return response;
+};
+
+export const fetchReceivables = async () => {
+  const response = await api.get("/accounts/receivables");
+  return response.data.receivables;
+};
+
+export const addReceivable = async (receivableData) => {
+  const response = await api.post("/accounts/receivables/new", receivableData);
+  return response;
+};
+
+export const fetchPayables = async () => {
+  const response = await api.get("/accounts/payables");
+  return response.data.payables;
+};
+
+export const addPayable = async (payableData) => {
+  const response = await api.post("/accounts/payables/new", payableData);
   return response;
 };

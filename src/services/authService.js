@@ -10,8 +10,9 @@ export const authService = {
     try {
       console.log(credentials);
       const response = await api.post("/auth/login", credentials);
-      console.log(response.data);
+      // console.log(response.data);
       this.setSession(response.data);
+      // console.log(response);
       return response.data;
     } catch (error) {
       console.error(

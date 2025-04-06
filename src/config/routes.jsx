@@ -11,12 +11,20 @@ const AdminLayout = lazy(() => import("../layouts/AdminLayout"));
 const AdminProfile = lazy(() => import("../pages/AdminDashboard/AdminProfile"));
 const Staffs = lazy(() => import("../pages/AdminDashboard/Staffs"));
 const AddStaff = lazy(() => import("../pages/AdminDashboard/AddStaff"));
+const AddAdmin = lazy(() => import("../pages/AdminDashboard/AddAdmin"));
 
 const StaffLayout = lazy(() => import("../layouts/StaffLayout"));
 const StaffProfile = lazy(() => import("../pages/StaffDashboard/StaffProfile"));
 const AddCustomer = lazy(() => import("../pages/StaffDashboard/AddCustomer"));
 const AddService = lazy(() => import("../pages/StaffDashboard/AddService"));
 const AddVendor = lazy(() => import("../pages/StaffDashboard/AddVendor"));
+
+const Receivables = lazy(
+  () => import("../pages/StaffDashboard/Accounts/Receivables")
+);
+const Payables = lazy(
+  () => import("../pages/StaffDashboard/Accounts/Payables")
+);
 
 const MarketingCampaigns = lazy(
   () => import("../pages/StaffDashboard/Marketing/MarketingCampaigns")
@@ -58,6 +66,10 @@ export const routes = [
         path: "add-staff",
         element: <AddStaff />,
       },
+      {
+        path: "add-admin",
+        element: <AddAdmin />,
+      },
     ],
   },
   {
@@ -73,15 +85,15 @@ export const routes = [
         element: <StaffProfile />,
       },
       {
-        path: "add-service",
+        path: "services",
         element: <AddService />,
       },
       {
-        path: "add-customer",
+        path: "customers",
         element: <AddCustomer />,
       },
       {
-        path: "add-vendor",
+        path: "vendors",
         element: <AddVendor />,
       },
       {
@@ -91,6 +103,14 @@ export const routes = [
       {
         path: "marketing-campaigns",
         element: <MarketingCampaigns />,
+      },
+      {
+        path: "receivables",
+        element: <Receivables />,
+      },
+      {
+        path: "payables",
+        element: <Payables />,
       },
     ],
   },
