@@ -285,7 +285,7 @@ const Login = () => {
         phone: data.phone,
         password: data.password,
       });
-      console.log("User logged in", userData);
+      // console.log("User logged in", userData);
 
       // Show success toast
       setToast({

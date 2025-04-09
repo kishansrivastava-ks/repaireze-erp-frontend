@@ -8,9 +8,9 @@ export const authService = {
   // Logs in the user by sending credentials to the API
   async login(credentials) {
     try {
-      console.log(credentials);
+      console.log("Entered login in auth services", credentials);
       const response = await api.post("/auth/login", credentials);
-      // console.log(response.data);
+      console.log(response.data);
       this.setSession(response.data);
       // console.log(response);
       return response.data;
@@ -30,6 +30,7 @@ export const authService = {
 
   // stores token in cookies and user data in local storage
   setSession(authData) {
+    console.log("Entering set auth data", authData);
     Cookies.set(TOKEN_KEY, authData.token, {
       expires: 7,
       secure: true,
