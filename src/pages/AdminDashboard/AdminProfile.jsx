@@ -26,6 +26,8 @@ const ProfileCard = styled(motion.div)`
 
   @media (max-width: 768px) {
     padding: 1.5rem;
+    box-shadow: none;
+    /* border: 2px solid red; */
   }
 `;
 

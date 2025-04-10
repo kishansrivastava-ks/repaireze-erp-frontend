@@ -114,6 +114,10 @@ const Container = styled.div`
   height: 100vh;
   background-color: #f8f9fa;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    position: relative;
+  }
 `;
 
 const Sidebar = styled(motion.nav)`
@@ -127,6 +131,17 @@ const Sidebar = styled(motion.nav)`
   transition: width 0.3s ease;
   overflow-y: auto;
   z-index: 10;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: ${({ isOpen }) =>
+      isOpen ? "translateX(0)" : "translateX(-100%)"};
+    transition: transform 0.3s ease;
+    width: 250px;
+  }
 `;
 
 const SidebarHeader = styled.div`
@@ -184,6 +199,9 @@ const CollapseButton = styled.button`
     background: rgba(255, 255, 255, 0.1);
     color: white;
   }
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const NavLinks = styled.div`
@@ -223,6 +241,10 @@ const SidebarLink = styled(NavLink)`
   &:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
 `;
 
@@ -270,6 +292,10 @@ const Content = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const TopBar = styled.header`
@@ -280,6 +306,79 @@ const TopBar = styled.header`
   justify-content: space-between;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   z-index: 5;
+
+  @media (max-width: 768px) {
+    padding: 0.5rem 1rem;
+  }
+`;
+
+const HamburgerButton = styled.button`
+  display: none;
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.dark};
+  cursor: pointer;
+  font-size: 24px;
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+  }
+`;
+
+const HamburgerIcon = styled.div`
+  width: 24px;
+  height: 18px;
+  position: relative;
+  transform: rotate(0deg);
+  transition: 0.5s ease-in-out;
+  cursor: pointer;
+
+  span {
+    display: block;
+    position: absolute;
+    height: 3px;
+    width: 100%;
+    background: ${({ theme }) => theme.colors.dark};
+    border-radius: 3px;
+    opacity: 1;
+    left: 0;
+    transform: rotate(0deg);
+    transition: 0.25s ease-in-out;
+  }
+
+  span:nth-child(1) {
+    top: ${({ isOpen }) => (isOpen ? "8px" : "0px")};
+    transform: ${({ isOpen }) => (isOpen ? "rotate(135deg)" : "rotate(0)")};
+  }
+
+  span:nth-child(2) {
+    top: 8px;
+    opacity: ${({ isOpen }) => (isOpen ? "0" : "1")};
+    left: ${({ isOpen }) => (isOpen ? "-60px" : "0")};
+  }
+
+  span:nth-child(3) {
+    top: ${({ isOpen }) => (isOpen ? "8px" : "16px")};
+    transform: ${({ isOpen }) => (isOpen ? "rotate(-135deg)" : "rotate(0)")};
+  }
+`;
+
+const Overlay = styled(motion.div)`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: ${({ isOpen }) => (isOpen ? "block" : "none")};
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 5;
+  }
 `;
 
 const PageTitle = styled.h1`
@@ -328,6 +427,9 @@ const MainContent = styled(motion.main)`
   padding: 2rem;
   overflow-y: auto;
   background-color: #f8f9fa;
+  @media (max-width: 768px) {
+    padding: 0;
+  }
 `;
 
 const getPageTitle = (pathname) => {
@@ -345,6 +447,8 @@ const StaffLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [marketingDropdownOpen, setMarketingDropdownOpen] = useState(false);
   const [accountsDropdownOpen, setAccountsDropdownOpen] = useState(false);
 
@@ -353,6 +457,15 @@ const StaffLayout = () => {
   };
   const toggleAccountsDropdown = () => {
     setAccountsDropdownOpen(!accountsDropdownOpen);
+  };
+
+  const toggleMobileSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+  const closeMobileSidebar = () => {
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -385,10 +498,26 @@ const StaffLayout = () => {
 
   return (
     <Container>
+      <Overlay
+        isOpen={sidebarOpen}
+        onClick={() => setSidebarOpen(false)}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: sidebarOpen ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+      />
       <Sidebar
         collapsed={collapsed}
+        isOpen={sidebarOpen}
         initial={false}
-        animate={{ width: collapsed ? "70px" : "250px" }}
+        animate={{
+          width: collapsed ? "70px" : "250px",
+          transform:
+            window.innerWidth <= 768
+              ? sidebarOpen
+                ? "translateX(0)"
+                : "translateX(-100%)"
+              : "none",
+        }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <div>
@@ -410,6 +539,7 @@ const StaffLayout = () => {
             <SidebarLink
               to="/staff-dashboard/profile"
               collapsed={collapsed ? 1 : 0}
+              onClick={closeMobileSidebar}
             >
               <LinkIcon collapsed={collapsed ? 1 : 0}>
                 <ProfileIcon />
@@ -419,6 +549,7 @@ const StaffLayout = () => {
             <SidebarLink
               to="/staff-dashboard/services"
               collapsed={collapsed ? 1 : 0}
+              onClick={closeMobileSidebar}
             >
               <LinkIcon collapsed={collapsed ? 1 : 0}>
                 <ServicesIcon />
@@ -428,6 +559,7 @@ const StaffLayout = () => {
             <SidebarLink
               to="/staff-dashboard/customers"
               collapsed={collapsed ? 1 : 0}
+              onClick={closeMobileSidebar}
             >
               <LinkIcon collapsed={collapsed ? 1 : 0}>
                 <CustomersIcon />
@@ -437,6 +569,7 @@ const StaffLayout = () => {
             <SidebarLink
               to="/staff-dashboard/vendors"
               collapsed={collapsed ? 1 : 0}
+              onClick={closeMobileSidebar}
             >
               <LinkIcon collapsed={collapsed ? 1 : 0}>
                 <VendorsIcon />
@@ -457,10 +590,16 @@ const StaffLayout = () => {
             </SidebarLink>
             {marketingDropdownOpen && (
               <DropdownMenu collapsed={collapsed ? 1 : 0}>
-                <DropdownItem to="/staff-dashboard/marketing-plans">
+                <DropdownItem
+                  to="/staff-dashboard/marketing-plans"
+                  onClick={closeMobileSidebar}
+                >
                   Marketing Plans
                 </DropdownItem>
-                <DropdownItem to="/staff-dashboard/marketing-campaigns">
+                <DropdownItem
+                  to="/staff-dashboard/marketing-campaigns"
+                  onClick={closeMobileSidebar}
+                >
                   Marketing Campaigns
                 </DropdownItem>
               </DropdownMenu>
@@ -479,10 +618,16 @@ const StaffLayout = () => {
             </SidebarLink>
             {accountsDropdownOpen && (
               <DropdownMenu collapsed={collapsed ? 1 : 0}>
-                <DropdownItem to="/staff-dashboard/receivables">
+                <DropdownItem
+                  to="/staff-dashboard/receivables"
+                  onClick={closeMobileSidebar}
+                >
                   Receivables
                 </DropdownItem>
-                <DropdownItem to="/staff-dashboard/payables">
+                <DropdownItem
+                  to="/staff-dashboard/payables"
+                  onClick={closeMobileSidebar}
+                >
                   Payables
                 </DropdownItem>
               </DropdownMenu>
@@ -496,7 +641,16 @@ const StaffLayout = () => {
       </Sidebar>
       <Content>
         <TopBar>
-          <PageTitle>{pageTitle}</PageTitle>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <HamburgerButton onClick={toggleMobileSidebar}>
+              <HamburgerIcon isOpen={sidebarOpen}>
+                <span></span>
+                <span></span>
+                <span></span>
+              </HamburgerIcon>
+            </HamburgerButton>
+            <PageTitle>{pageTitle}</PageTitle>
+          </div>
           <UserInfo>
             <UserDetails>
               <UserName>{user?.name || "Staff User"}</UserName>

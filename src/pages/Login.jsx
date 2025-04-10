@@ -62,6 +62,11 @@ const BackgroundShape = styled(motion.div)`
     rgba(0, 112, 243, 0.02) 100%
   );
   z-index: 0;
+
+  @media (max-width: 768px) {
+    width: 300px;
+    height: 300px;
+  }
 `;
 
 const LoginFormContainer = styled(motion.div)`
@@ -72,6 +77,7 @@ const LoginFormContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 0 20px; /* Add padding for mobile */
 `;
 
 const CompanyLogo = styled.div`
@@ -79,6 +85,10 @@ const CompanyLogo = styled.div`
   flex-direction: column;
   align-items: center;
   margin-bottom: ${({ theme }) => theme.space.lg};
+
+  @media (max-width: 768px) {
+    margin-bottom: ${({ theme }) => theme.space.md};
+  }
 `;
 
 const LogoText = styled.h1`
@@ -87,6 +97,9 @@ const LogoText = styled.h1`
   color: ${({ theme }) => theme.colors.primary};
   margin: 0;
   letter-spacing: -0.5px;
+  @media (max-width: 768px) {
+    font-size: ${({ theme }) => theme.fontSizes.lg};
+  }
 `;
 
 const Tagline = styled.p`
@@ -102,6 +115,13 @@ const LoginForm = styled(motion.form)`
   background-color: white;
   border-radius: ${({ theme }) => theme.radii.lg};
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 768px) {
+    padding: ${({ theme }) => theme.space.md};
+    box-shadow: none;
+    border-radius: 0;
+    background-color: transparent;
+  }
 `;
 
 const Title = styled.h2`
@@ -110,6 +130,11 @@ const Title = styled.h2`
   color: ${({ theme }) => theme.colors.dark};
   font-weight: 600;
   font-size: ${({ theme }) => theme.fontSizes.lg};
+
+  @media (max-width: 768px) {
+    font-size: ${({ theme }) => theme.fontSizes.md};
+    margin-bottom: ${({ theme }) => theme.space.md};
+  }
 `;
 
 const FormGroup = styled.div`
@@ -142,6 +167,11 @@ const Input = styled.input`
 
   &::placeholder {
     color: #adb5bd;
+  }
+
+  @media (max-width: 768px) {
+    /* padding: ${({ theme }) => theme.space.sm}; */
+    font-size: ${({ theme }) => theme.fontSizes.sm};
   }
 `;
 
@@ -246,6 +276,15 @@ const ToastWrapper = styled(motion.div)`
   align-items: center;
   z-index: 1000;
   min-width: 300px;
+
+  @media (max-width: 480px) {
+    min-width: 90%;
+    max-width: 95%;
+    padding: ${({ theme }) => `${theme.space.xs} ${theme.space.md}`};
+    font-size: ${({ theme }) => theme.fontSizes.sm};
+    top: 20px;
+    height: 40px;
+  }
 `;
 
 const ToastMessage = styled.span`

@@ -80,6 +80,10 @@ const Container = styled(motion.div)`
   );
   position: relative;
   overflow: hidden;
+
+  @media (max-width: 480px) {
+    padding: 0 15px;
+  }
 `;
 
 const BackgroundShape = styled(motion.div)`
@@ -93,6 +97,16 @@ const BackgroundShape = styled(motion.div)`
     rgba(0, 112, 243, 0.02) 100%
   );
   z-index: 0;
+
+  @media (max-width: 768px) {
+    width: 400px;
+    height: 400px;
+  }
+
+  @media (max-width: 480px) {
+    width: 300px;
+    height: 300px;
+  }
 `;
 
 const Card = styled(motion.div)`
@@ -105,6 +119,14 @@ const Card = styled(motion.div)`
   text-align: center;
   max-width: 400px;
   width: 100%;
+
+  @media (max-width: 480px) {
+    padding: ${({ theme }) => theme.space.lg};
+    max-width: 90%;
+    box-shadow: none;
+    border-radius: 0;
+    background: transparent;
+  }
 `;
 
 const Logo = styled.div`
@@ -118,6 +140,10 @@ const Title = styled.h2`
   margin-bottom: ${({ theme }) => theme.space.md};
   color: ${({ theme }) => theme.colors.dark};
   font-weight: 600;
+
+  @media (max-width: 480px) {
+    font-size: ${({ theme }) => theme.fontSizes.lg};
+  }
 `;
 
 const WelcomeText = styled.div`
@@ -133,6 +159,10 @@ const Instruction = styled(motion.p)`
   margin-bottom: ${({ theme }) => theme.space.md};
   color: ${({ theme }) => theme.colors.dark};
   font-size: ${({ theme }) => theme.fontSizes.md};
+
+  @media (max-width: 480px) {
+    font-size: ${({ theme }) => theme.fontSizes.sm};
+  }
 `;
 
 const PinInputContainer = styled.div`
@@ -170,6 +200,11 @@ const PinDigit = styled(motion.div)`
     border-radius: 50%;
     background-color: ${({ theme }) => theme.colors.dark};
     display: ${({ isFilled }) => (isFilled ? "block" : "none")};
+  }
+
+  @media (max-width: 480px) {
+    width: 40px;
+    height: 50px;
   }
 `;
 
@@ -217,6 +252,11 @@ const Button = styled(motion.button)`
     cursor: not-allowed;
     transform: translateY(0);
     box-shadow: none;
+  }
+
+  @media (max-width: 480px) {
+    height: 45px;
+    font-size: ${({ theme }) => theme.fontSizes.sm};
   }
 `;
 
@@ -283,6 +323,13 @@ const ToastWrapper = styled(motion.div)`
   align-items: center;
   z-index: 1000;
   min-width: 300px;
+
+  @media (max-width: 480px) {
+    min-width: 85%;
+    padding: ${({ theme }) => `${theme.space.xs} ${theme.space.md}`};
+    top: 20px;
+    height: 50px;
+  }
 `;
 
 const ToastMessage = styled.span`
@@ -389,7 +436,7 @@ const VerifyPin = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.3 }}
       >
-        <Logo>Mendt Technologies Private Limited</Logo>
+        <Logo>Repaireze for Businesss</Logo>
         <Title>Two-Factor Authentication</Title>
 
         <WelcomeText>

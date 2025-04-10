@@ -27,6 +27,12 @@ const ProfileCard = styled(motion.div)`
 
   @media (max-width: 768px) {
     padding: 1.5rem;
+    box-shadow: none;
+    /* background: transparent; */
+    /* border: 2px solid red; */
+    &::before {
+      display: none;
+    }
   }
 `;
 
@@ -62,6 +68,12 @@ const AvatarContainer = styled.div`
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    width: 80px;
+    height: 80px;
+    box-shadow: none;
+  }
 `;
 
 const AvatarInitial = styled.span`
@@ -222,7 +234,7 @@ const StaffProfile = () => {
         <AvatarContainer>
           <AvatarInitial>{getInitial()}</AvatarInitial>
         </AvatarContainer>
-        <Title>Staff Profile</Title>
+        <Title>Your Profile</Title>
         <Subtitle>Mendt Technologies Private Limited</Subtitle>
       </Header>
 
