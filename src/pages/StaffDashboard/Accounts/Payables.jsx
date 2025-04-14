@@ -107,7 +107,7 @@ const Payables = () => {
 
   return (
     <Container>
-      <Title>Receivables Management</Title>
+      <Title>Payables Management</Title>
 
       {isLoadingPayables ? (
         <Loader />

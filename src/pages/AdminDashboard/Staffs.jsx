@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchStaffs } from "@/utils/api";
 import styled from "styled-components";
 import { useAuth } from "@/context/AuthContext";
@@ -14,7 +14,11 @@ import {
   FaSortUp,
   FaSortDown,
   FaUserPlus,
+  FaTrash,
 } from "react-icons/fa";
+import api from "@/services/api";
+import { errorToast, successToast } from "@/utils/ToastNotfications";
+import ConfirmationDialog from "@/utils/ConfirmationDialog";
 
 // Container with improved styling
 const Container = styled(motion.div)`
@@ -347,16 +351,46 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0 },
-};
+// const itemVariants = {
+//   hidden: { opacity: 0, y: 10 },
+//   visible: { opacity: 1, y: 0 },
+// };
 
 const Staffs = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [staffToDelete, setStaffToDelete] = useState(null);
+
+  // const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  const deleteStaffApi = async (staffId) => {
+    await api.delete(`/auth/delete-staff/${staffId}`);
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteStaffApi,
+    onSuccess: () => {
+      successToast("Staff member deleted successfully!");
+      queryClient.invalidateQueries({
+        queryKey: ["staffs"],
+      });
+      setIsConfirmOpen(false);
+      setStaffToDelete(null);
+      // setIsDeleteLoading(false);
+    },
+    onError: (error) => {
+      errorToast(`Error deleting staff member: ${error.message}`);
+      // setIsDeleteLoading(false);
+      setIsConfirmOpen(false);
+      setStaffToDelete(null);
+    },
+  });
 
   const {
     data: staffs,
@@ -515,6 +549,7 @@ const Staffs = () => {
                     {renderSortIcon("staffRole")}
                   </SortButton>
                 </th>
+                <th>Actions</th>
               </tr>
             </TableHead>
             <TableBody>
@@ -542,6 +577,20 @@ const Staffs = () => {
                         {staff.staffRole}
                       </RoleBadge>
                     </td>
+                    <td>
+                      <ActionButton
+                        onClick={() => {
+                          setStaffToDelete(staff._id);
+                          setIsConfirmOpen(true);
+                        }}
+                        disabled={deleteMutation.isPending}
+                        title="Delete Staff"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <FaTrash />
+                      </ActionButton>
+                    </td>
                   </motion.tr>
                 ))}
               </AnimatePresence>
@@ -555,8 +604,32 @@ const Staffs = () => {
           <p>Try adjusting your search or add new staff members.</p>
         </EmptyState>
       )}
+
+      {isConfirmOpen && (
+        <ConfirmationDialog
+          isOpen={isConfirmOpen}
+          onClose={() => setIsConfirmOpen(false)}
+          onConfirm={() => {
+            if (staffToDelete) {
+              deleteMutation.mutate(staffToDelete);
+            }
+          }}
+          title="Confirm Deletion"
+          message={`Are you sure you want to delete this staff member? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          isConfirming={deleteMutation.isPending}
+        />
+      )}
     </Container>
   );
 };
 
 export default Staffs;
+
+const ActionButton = styled(motion.button)`
+  background-color: transparent;
+  border: none;
+  color: #333;
+  cursor: pointer;
+`;

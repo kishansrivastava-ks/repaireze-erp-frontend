@@ -37,6 +37,7 @@ const Container = styled(motion.div)`
 const Header = styled.div`
   margin-bottom: 2rem;
   position: relative;
+  /* border: 2px solid red; */
 `;
 
 // Back button
@@ -53,6 +54,8 @@ const BackButton = styled(motion.button)`
   font-size: 0.9rem;
   cursor: pointer;
   padding: 0;
+
+  z-index: 5;
 
   &:hover {
     color: #3949ab;

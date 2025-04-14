@@ -2,6 +2,11 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchServices, addService, searchCustomers } from "@/utils/api";
 import styled from "styled-components";
+import { FaEdit, FaPencilAlt, FaPencilRuler } from "react-icons/fa";
+import { Edit } from "lucide-react";
+import api from "@/services/api";
+import { errorToast, infoToast, successToast } from "@/utils/ToastNotfications";
+import Modal from "@/utils/Modal";
 
 // Styled Components
 const Container = styled.div`
@@ -268,6 +273,140 @@ const AddService = () => {
     },
   });
 
+  // editing
+  const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState(null); // Holds the service being edited
+  const [editedData, setEditedData] = useState({}); // Holds changes made in the modal form
+
+  const updateServiceApi = async ({ serviceId, data }) => {
+    const response = await api.patch(`/services/${serviceId}/update`, data);
+    return response.data;
+  };
+
+  const updateServiceMutation = useMutation({
+    mutationFn: updateServiceApi,
+    onSuccess: () => {
+      successToast("Service updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["services", statusFilter] });
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      handleCloseEditModal();
+    },
+    onError: (error) => {
+      errorToast("Error updating service. Please try again.");
+      console.error("Error updating service:", error);
+    },
+  });
+
+  const handleOpenEditModal = (service) => {
+    setEditingService(service);
+    setEditedData({
+      serviceType: service.serviceType || "",
+      status: service.status || "ongoing",
+      scheduledDate: formatDateForInput(service.scheduledDate) || "",
+      payment: {
+        isPaid: service.payment.isPaid || false,
+        amount: service.payment.amount || "",
+      },
+    });
+
+    setIsEditingModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditingModalOpen(false);
+    setEditingService(null);
+    setEditedData({});
+  };
+
+  // handles changes withing the edit modal form
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+
+    // handle nested payment field
+    if (name.startsWith("payment.")) {
+      setEditedData((prev) => ({
+        ...prev,
+        payment: {
+          ...prev.payment,
+          amount: value,
+        },
+      }));
+    } else {
+      setEditedData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  // handles changes specifically for the payment status dropdown in the modal
+  const handleEditPaymentStatusChange = (e) => {
+    const isPaid = e.target.value === "yes";
+    setEditedData((prev) => ({
+      ...prev,
+      payment: {
+        ...prev.payment,
+        isPaid: isPaid,
+        amount: isPaid ? prev.payment.amount : "",
+      },
+    }));
+  };
+
+  // called when save button in the edit modal is clicked
+  const handleSaveChanges = (e) => {
+    e.preventDefault();
+
+    if (!editingService) return;
+
+    // determine changes fields
+    const payload = {};
+    if (editedData.serviceType !== editingService.serviceType) {
+      payload.serviceType = editedData.serviceType;
+    }
+    if (editedData.status !== editingService.status) {
+      payload.status = editedData.status;
+    }
+    if (editedData.scheduledDate !== editingService.scheduledDate) {
+      payload.scheduledDate = editedData.scheduledDate;
+    }
+    // Check payment changes (handle potential undefined/null in original)
+
+    const originalPayment = editingService.payment || {
+      isPaid: false,
+      amount: 0,
+    };
+    const editedPayment = editedData.payment || { ispaid: false, amount: 0 };
+
+    const paymentChanged =
+      editedPayment.ispaid !== originalPayment.isPaid ||
+      // Only compare amount if it's paid or was originally paid and is now unpaid
+
+      (editedPayment.isPaid &&
+        String(editedPayment.amount) !== String(originalPayment.amount)) ||
+      (!editedPayment.isPaid && originalPayment.isPaid);
+
+    if (paymentChanged) {
+      payload.payment = {
+        isPaid: editedPayment.isPaid,
+        // Send 0 if not paid, otherwise send the entered amount (or 0 if empty)
+        amount: editedPayment.isPaid ? Number(editedPayment.amount) || 0 : 0,
+      };
+    }
+
+    // If no changes detected, inform user or just close
+    if (Object.keys(payload).length === 0) {
+      infoToast("No changes detected.");
+      handleCloseEditModal();
+      return;
+    }
+
+    // Trigger the mutation if there are changes
+    updateServiceMutation.mutate({
+      serviceId: editingService._id,
+      data: payload,
+    });
+  };
+
   // Fetch services based on status
   const {
     data: services,
@@ -398,6 +537,7 @@ const AddService = () => {
               <Th>Service Type</Th>
               <Th>Scheduled Date</Th>
               <Th>Payment</Th>
+              <Th>Actions</Th>
             </tr>
           </thead>
           <tbody>
@@ -411,6 +551,17 @@ const AddService = () => {
                   {service.payment.isPaid
                     ? `₹${service.payment.amount}`
                     : "Pending"}
+                </Td>
+                <Td>
+                  <FaEdit
+                    onClick={() => handleOpenEditModal(service)}
+                    style={{
+                      cursor: "pointer",
+                      color: "var(--primary-color, blue)",
+                      fontSize: "1.1em",
+                    }}
+                    title="Edit Service"
+                  />
                 </Td>
               </TrStriped>
             ))}
@@ -586,6 +737,99 @@ const AddService = () => {
             </Button>
           </ButtonGroup>
         </FormCard>
+      )}
+
+      {/* --- Edit Service Modal --- */}
+      {editingService && (
+        <Modal
+          isOpen={isEditingModalOpen}
+          onClose={handleCloseEditModal}
+          title={`Edit Service for ${editingService.customerName}`}
+          footerContent={
+            <>
+              <Button secondary onClick={handleCloseEditModal}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveChanges}
+                disabled={updateServiceMutation.isPending}
+              >
+                {updateServiceMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </>
+          }
+        >
+          <form onSubmit={handleSaveChanges}>
+            <FormGroup>
+              <Label>Customer</Label>
+              <Input type="text" value={editingService.customerName} disabled />
+            </FormGroup>
+            <FormGroup>
+              <Label>Contact Number</Label>
+              <Input
+                type="text"
+                value={editingService.customerMobile}
+                disabled
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Service Type*</Label>
+              <Input
+                type="text"
+                name="serviceType"
+                value={editedData.serviceType || ""}
+                onChange={handleEditInputChange}
+                placeholder="E.g., Repair, Installation"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Service Status</Label>
+              <Select
+                name="status"
+                value={editedData.status || "ongoing"}
+                onChange={handleEditInputChange}
+              >
+                <option value="ongoing">Ongoing</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="completed">Completed</option>
+              </Select>
+            </FormGroup>
+            <FormGroup>
+              <Label>Scheduled Date*</Label>
+              <Input
+                type="date"
+                name="scheduledDate"
+                value={editedData.scheduledDate || ""}
+                onChange={handleEditInputChange}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Payment Status</Label>
+              <Select
+                name="payment.isPaid"
+                value={editedData.payment?.isPaid ? "yes" : "no"}
+                onChange={handleEditPaymentStatusChange}
+              >
+                <option value="no">Payment Pending</option>
+                <option value="yes">Payment Completed</option>
+              </Select>
+            </FormGroup>
+            {/* Conditionally show Amount input */}
+            {editedData.payment?.isPaid && (
+              <FormGroup>
+                <Label>Amount (₹)</Label>
+                <Input
+                  type="number"
+                  name="payment.amount"
+                  value={editedData.payment?.amount || ""}
+                  onChange={handleEditInputChange}
+                  placeholder="Enter amount"
+                  min="0" // Optional: prevent negative numbers
+                />
+              </FormGroup>
+            )}
+          </form>
+        </Modal>
       )}
     </Container>
   );
