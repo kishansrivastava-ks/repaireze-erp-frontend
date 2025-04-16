@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchVendors, addVendor } from "@/utils/api";
 import styled from "styled-components";
+import api from "@/services/api";
+import { errorToast, infoToast, successToast } from "@/utils/ToastNotfications";
+import { Edit } from "lucide-react";
+import Modal from "@/utils/Modal";
 // import { toast } from "react-hot-toast";
 
 const Container = styled.div`
@@ -209,6 +213,86 @@ const AddVendor = () => {
     queryFn: fetchVendors,
   });
 
+  // ----EDITING FEATURE ----
+  const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
+  const [editingVendor, setEditingVendor] = useState(null);
+  const [editedData, setEditedData] = useState({});
+
+  const updateVendorApi = async ({ vendorId, data }) => {
+    await api.patch(`/vendors/${vendorId}/update`, data);
+  };
+
+  const updateVendorMutation = useMutation({
+    mutationFn: updateVendorApi,
+    onSuccess: () => {
+      successToast("Vendor updated successfully!");
+      queryClient.invalidateQueries(["vendors"]);
+      handleCloseEditModal();
+    },
+    onError: (error) => {
+      errorToast("Error updating vendor!");
+      console.error("Error updating vendor:", error);
+    },
+  });
+
+  const handleOpenEditModal = (vendor) => {
+    setEditingVendor(vendor);
+    setEditedData({
+      name: vendor.name || "",
+      mobile: vendor.mobile || "",
+      category: vendor.category || "",
+      address: vendor.address || "",
+      alternateMobile: vendor.alternateMobile || "",
+    });
+    setIsEditingModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditingModalOpen(false);
+    setEditingVendor(null);
+    setEditedData({});
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+
+    setEditedData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveChanges = (e) => {
+    e.preventDefault();
+
+    if (!editingVendor) return;
+
+    const payload = {};
+
+    // determine changed fields
+    if (editedData.name !== editingVendor.name) payload.name = editedData.name;
+    if (editedData.mobile !== editingVendor.mobile)
+      payload.mobile = editedData.mobile;
+    if (editedData.category !== editingVendor.category)
+      payload.category = editedData.category;
+    if (editedData.address !== editingVendor.address)
+      payload.address = editedData.address;
+    if (editedData.alternateMobile !== editingVendor.alternateMobile)
+      payload.alternateMobile = editedData.alternateMobile;
+
+    if (Object.keys(payload).length === 0) {
+      infoToast("No changes detected!");
+      handleCloseEditModal();
+      return;
+    }
+
+    // trigger the mutation if there are changes
+    updateVendorMutation.mutate({
+      vendorId: editingVendor._id,
+      data: payload,
+    });
+  };
+
   const mutation = useMutation({
     mutationFn: addVendor,
     onSuccess: (newVendor) => {
@@ -342,6 +426,7 @@ const AddVendor = () => {
               <Th>Mobile</Th>
               <Th>Alt. Mobile</Th>
               <Th>Address</Th>
+              <Th>Actions</Th>
             </tr>
           </thead>
           <tbody>
@@ -357,13 +442,158 @@ const AddVendor = () => {
                 <Td>{vendor.mobile}</Td>
                 <Td>{vendor.alternateMobile || "N/A"}</Td>
                 <Td>{vendor.address}</Td>
+                <Td>
+                  <Edit
+                    onClick={() => handleOpenEditModal(vendor)}
+                    title="Edit Vendor"
+                    style={{
+                      cursor: "pointer",
+                      color: "var(--primary-color, blue)",
+                      fontSize: "1.1em",
+                    }}
+                  />
+                </Td>
               </TableRow>
             ))}
           </tbody>
         </Table>
+      )}
+
+      {/* ----Editing vendor modal --- */}
+      {editingVendor && (
+        <Modal
+          isOpen={isEditingModalOpen}
+          onClose={handleCloseEditModal}
+          title={`Edit vendor: ${editingVendor.name}`}
+          footerContent={
+            <>
+              <Button secondary onClick={handleCloseEditModal}>
+                Cancel
+              </Button>
+              <Button
+                disabled={updateVendorMutation.isPending}
+                onClick={handleSaveChanges}
+              >
+                {updateVendorMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </>
+          }
+        >
+          <EditForm onSubmit={handleSaveChanges}>
+            <FormGroup>
+              <Label>Name</Label>
+              <EditInput
+                type="text"
+                name="name"
+                value={editedData.name || ""}
+                onChange={handleEditInputChange}
+                placeholder="Vendor Name"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Mobile</Label>
+              <EditInput
+                type="text"
+                name="mobile"
+                value={editedData.mobile || ""}
+                onChange={handleEditInputChange}
+                placeholder="Mobile Number"
+                maxLength={10}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Category</Label>
+              <EditInput
+                type="text"
+                name="category"
+                value={editedData.category || ""}
+                onChange={handleEditInputChange}
+                placeholder="Category"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Address</Label>
+              <EditInput
+                type="text"
+                name="address"
+                value={editedData.address || ""}
+                onChange={handleEditInputChange}
+                placeholder="Address"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Alternate Mobile</Label>
+              <EditInput
+                type="text"
+                name="alternateMobile"
+                value={editedData.alternateMobile || ""}
+                onChange={handleEditInputChange}
+                placeholder="Alternate Mobile"
+                maxLength={10}
+              />
+            </FormGroup>
+          </EditForm>
+        </Modal>
       )}
     </Container>
   );
 };
 
 export default AddVendor;
+
+// EDITING VENDOR MODAL
+const EditForm = styled.form`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #464646;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+`;
+
+const EditInput = styled.input`
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #333;
+  background-color: #fff;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  &:hover:not(:focus) {
+    border-color: #d0d0d0;
+  }
+
+  &::placeholder {
+    color: #a0a0a0;
+  }
+
+  &[type="date"] {
+    padding: 10px 14px;
+  }
+`;

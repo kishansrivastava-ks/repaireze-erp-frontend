@@ -3,6 +3,11 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchCustomers, addCustomer } from "@/utils/api";
 import styled from "styled-components";
+import api from "@/services/api";
+import { errorToast, infoToast, successToast } from "@/utils/ToastNotfications";
+import { FaEdit } from "react-icons/fa";
+import Modal from "@/utils/Modal";
+import { Edit } from "lucide-react";
 // import { toast } from "react-hot-toast";
 
 const Container = styled.div`
@@ -183,6 +188,86 @@ const AddCustomer = () => {
     address: "",
   });
 
+  const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null); // holds the customer being edited
+  const [editedData, setEditedData] = useState({}); // holds the changes made in the modal form
+
+  const updateCustomerApi = async ({ customerId, data }) => {
+    await api.patch(`/customers/${customerId}/update`, data);
+  };
+
+  const updateCustomerMutation = useMutation({
+    mutationFn: updateCustomerApi,
+    onSuccess: () => {
+      successToast("Customer updated successfully!");
+      queryClient.invalidateQueries(["customers"]);
+      handleCloseEditModal();
+    },
+    onError: (error) => {
+      errorToast("Error updating customer!");
+      console.error("Error updating customer:", error);
+    },
+  });
+
+  const handleOpenEditModal = (customer) => {
+    setEditingCustomer(customer);
+    setEditedData({
+      name: customer.name || "",
+      mobile: customer.mobile || "",
+      gstNumber: customer.gstNumber || "",
+      dob: customer.dob || "",
+      address: customer.address || "",
+    });
+    setIsEditingModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditingModalOpen(false);
+    setEditingCustomer(null);
+    setEditedData({});
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+
+    setEditedData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveChanges = (e) => {
+    e.preventDefault();
+
+    if (!editingCustomer) return;
+
+    const payload = {};
+
+    // determine changed fields
+    if (editedData.name !== editingCustomer.name)
+      payload.name = editedData.name;
+    if (editedData.mobile !== editingCustomer.mobile)
+      payload.mobile = editedData.mobile;
+    if (editedData.gstNumber !== editingCustomer.gstNumber)
+      payload.gstNumber = editedData.gstNumber;
+    if (editedData.dob !== editingCustomer.dob) payload.dob = editedData.dob;
+    if (editedData.address !== editingCustomer.address)
+      payload.address = editedData.address;
+
+    // if no change detected, inform user and return
+    if (Object.keys(payload).length === 0) {
+      infoToast("No changes detected!");
+      handleCloseEditModal();
+      return;
+    }
+
+    // trigger the mutation if there are changes
+    updateCustomerMutation.mutate({
+      customerId: editingCustomer._id,
+      data: payload,
+    });
+  };
+
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
     queryKey: ["customers"],
     queryFn: fetchCustomers,
@@ -330,6 +415,7 @@ const AddCustomer = () => {
               <Th>GST Number</Th>
               <Th>DOB</Th>
               <Th>Address</Th>
+              <Th>Actions</Th>
             </tr>
           </thead>
           <tbody>
@@ -345,13 +431,158 @@ const AddCustomer = () => {
                 <Td>{customer.gstNumber || "N/A"}</Td>
                 <Td>{formatDate(customer.dob)}</Td>
                 <Td>{customer.address}</Td>
+                <Td>
+                  <Edit
+                    onClick={() => handleOpenEditModal(customer)}
+                    title="Edit Customer"
+                    style={{
+                      cursor: "pointer",
+                      color: "var(--primary-color, blue)",
+                      fontSize: "1.1em",
+                    }}
+                  />
+                </Td>
               </TableRow>
             ))}
           </tbody>
         </Table>
+      )}
+
+      {/* ----Editing customer modal --- */}
+      {editingCustomer && (
+        <Modal
+          isOpen={isEditingModalOpen}
+          onClose={handleCloseEditModal}
+          title={`Edit Customer: ${editingCustomer.name}`}
+          footerContent={
+            <>
+              <Button secondary onClick={handleCloseEditModal}>
+                Cancel
+              </Button>
+              <Button
+                disabled={updateCustomerMutation.isPending}
+                onClick={handleSaveChanges}
+              >
+                {updateCustomerMutation.isPending
+                  ? "Saving..."
+                  : "Save Changes"}
+              </Button>
+            </>
+          }
+        >
+          <EditForm onSubmit={handleSaveChanges}>
+            <FormGroup>
+              <Label>Name</Label>
+              <EditInput
+                type="text"
+                name="name"
+                value={editedData.name || ""}
+                onChange={handleEditInputChange}
+                placeholder="Customer Name"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Mobile</Label>
+              <EditInput
+                type="text"
+                name="mobile"
+                value={editedData.mobile || ""}
+                onChange={handleEditInputChange}
+                placeholder="Mobile Number"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>GST Number</Label>
+              <EditInput
+                type="text"
+                name="gstNumber"
+                value={editedData.gstNumber || ""}
+                onChange={handleEditInputChange}
+                placeholder="GST Number (Optional)"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>DOB</Label>
+              <EditInput
+                type="date"
+                name="dob"
+                value={editedData.dob || ""}
+                onChange={handleEditInputChange}
+                placeholder="Date of Birth"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Address</Label>
+              <EditInput
+                type="text"
+                name="address"
+                value={editedData.address || ""}
+                onChange={handleEditInputChange}
+                placeholder="Address"
+              />
+            </FormGroup>
+          </EditForm>
+        </Modal>
       )}
     </Container>
   );
 };
 
 export default AddCustomer;
+
+// EDITING CUSTOMER MODAL
+const EditForm = styled.form`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #464646;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+`;
+
+const EditInput = styled.input`
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #333;
+  background-color: #fff;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  &:hover:not(:focus) {
+    border-color: #d0d0d0;
+  }
+
+  &::placeholder {
+    color: #a0a0a0;
+  }
+
+  &[type="date"] {
+    padding: 10px 14px;
+  }
+`;

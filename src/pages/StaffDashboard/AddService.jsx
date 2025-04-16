@@ -395,7 +395,7 @@ const AddService = () => {
 
     // If no changes detected, inform user or just close
     if (Object.keys(payload).length === 0) {
-      infoToast("No changes detected.");
+      infoToast("No changes detected!");
       handleCloseEditModal();
       return;
     }
